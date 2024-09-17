@@ -12,14 +12,14 @@
 وتشغيل السيرفر الخاصة ب laravel 
 او استخدام اي سيرفر اخر 
 `php artisan serve `
-**`jjjhjj`**
+
 ## الان يمكنك تسجيل الدخول عن طريق
 
 Post `http://127.0.0.1:8000/api/v1/login`
 email = you@me.com
 password = 1234
 
-## او تسجيل ادخول عن طريق
+## او تسجيل مستخدم جديد عن طريق
 
 
 Post ` http://127.0.0.1:8000/api/v1/register `
@@ -27,18 +27,18 @@ name = y
 email = you@me.com
 password = 1234
 
-## طلبات المستخدم 
+### طلبات المستخدم 
 Get All Users
 Get `http://127.0.0.1:8000/api/v1/users`
 Get One User
 Get `http://127.0.0.1:8000/api/v1/users/1`
-UpDate User  
+Update User  
 Put `http://127.0.0.1:8000/api/v1/users/1`
 Delete User 
 Delete `http://127.0.0.1:8000/api/v1/users/1`
 
 
-طلبات المجموعة 
+  ### طلبات المجموعة 
 
 Get All groups
 Get `http://127.0.0.1:8000/api/v1/groups`
@@ -53,14 +53,13 @@ name = move
 description = i love move
 image  = null
 
-UpDate group  
+Update group  
 Put `http://127.0.0.1:8000/api/v1/groups/1`
 
 Delete group
 Delete `http://127.0.0.1:8000/api/v1/groups/1`
 
-
-‎طلبات المنشورات
+### ‎طلبات المنشورات 
 
 Get All posts from group
 Get `http://127.0.0.1:8000/api/v1/group/2/posts`
@@ -74,14 +73,14 @@ title = Marvel
 description = i love DC
 image = null
 
-UpDate post
+Update post
 Put `http://127.0.0.1:8000/api/v1/group/1/posts/2`
 
 Delete post
 Delete `http://127.0.0.1:8000/api/v1/group/1/posts/2`
 
 
-‎طلبات التعليقات الخاصة بالمنشور 
+### ‎طلبات التعليقات الخاصة بالمنشور 
 
 Get All comments from post
 Get `http://127.0.0.1:8000/api/v1/post/2/comments`
@@ -100,7 +99,7 @@ Put `http://127.0.0.1:8000/api/v1/post/1/comments/2`
 Delete comment
 Delete `http://127.0.0.1:8000/api/v1/post/1/comments/2`
 
-‎طلبات التعليقات الخاصة بالتعليق 
+### ‎طلبات التعليقات الخاصة بالتعليق 
 
 Get All comments from comment
 Get `http://127.0.0.1:8000/api/v1/comment/2/commentForComment`
@@ -122,36 +121,55 @@ commentForComment/2
 Delete comment
 Delete `http://127.0.0.1:8000/api/v1/comment/2/commentForComment/2`
 
-المزيد من الطلبات 
+ ## المزيد من الطلبات 
 
-اضافة او حذف عضوى في المجموعة 
+### اضافة او حذف عضوى في المجموعة 
 
 Get Add Member
-Get `http://localhost:8000/api/v1/{userId}/{groupId}/addmember`
+Get `http://127.0.0.1:8000/api/v1/ addMember/{userId}/{groupId}`
  
 Get Delete Member
-Get `http://localhost:8000/api/v1/{userId}/{groupId}/deletemember` 
+Get `http://127.0.0.1:8000/api/v1/ deleteMember/{user}/{group}` 
 
+### اضافة او حذف اعجاب على منشور
 
-جميع اعضاء مجموعة معين
+Get Add like
+Get `http://127.0.0.1:8000/api/v1/like/{userId}/{postId}`
+ 
+Get unlike
+Get `http://127.0.0.1:8000/api/v1/unLike/{userId}/{postId}` 
+
+‎الحصول على قائمة اعجابات في منشور معين###
+Get list users of like for post
+Get `http://127.0.0.1:8000/api/v1/posts/5/likes`
+
+### جميع اعضاء مجموعة معين
 
 Get All Members from group 
 
-جميع المجموعات لمستخدم معين 
+Get `http://127.0.0.1:8000/api/v1/groups/3/members` 
+
+ ### جميع المجموعات لمستخدم معين 
 
 Get All groups from user 
 
-جميع المجموعات المنضم به مستخدم معين  
+Get `http://127.0.0.1:8000/api/v1/users/3/groups` 
+
+### جميع المجموعات المنضم به مستخدم معين  
 
 Get All groups from members 
 
-جميع المنشورات لمستخدم معين 
+Get `http://127.0.0.1:8000/api/v1/users/3/members` 
+
+### جميع المنشورات لمستخدم معين 
 
 Get All posts from user 
 
-جميع المنشورات
+Get `http://127.0.0.1:8000/api/v1/users/3/posts` 
+
+### جميع المنشورات
 
 Get All user 
 
-
+Get `http://127.0.0.1:8000/api/v1/posts` 
 
