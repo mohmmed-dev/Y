@@ -20,9 +20,9 @@ Route::prefix('/v1')->group(function () {
     Route::apiResources([
         'users' => UserController::class,
         'groups' => GroupController::class,
-        'groups.posts' => PostController::class  ,
-        'posts.comments' => CommentController::class,
-        'comments.commentForComment' => CommentForCommentController::class
+        'group.posts' => PostController::class  ,
+        'post.comments' => CommentController::class,
+        'comment.commentForComment' => CommentForCommentController::class
         ]);
     Route::post('login',[LoginController::class,'login'])->name('login');
     Route::post('register',[UserController::class,'store'])->name('register');
