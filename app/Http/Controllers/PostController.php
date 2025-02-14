@@ -10,11 +10,11 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Gate;
 
-class PostController extends Controller
+class PostController extends Controller implements HasMiddleware
 {
     public static function middleware() {
         return [
-            'auth' , new Middleware('api', except: ['index','show'])
+            new Middleware('auth:api', except: ['index','show'])
         ];
     }
     /**
@@ -22,9 +22,10 @@ class PostController extends Controller
      */
     public function index(Request $request ,Group $group)
     {
+        // $limit =  $request->input('limit') <= 25 ? $request->input('limit') : 25;
         $posts = $group->posts;
-        $limit =  $request->input('limit') <= 25 ? $request->input('limit') : 25;
-        $posts = PostResource::collection(Post::paginate($limit));
+        $posts->loadCount(['likes','comments']);
+        $posts = PostResource::collection($posts);
         return $posts;
     }
 
@@ -34,20 +35,32 @@ class PostController extends Controller
     public function store(Request $request,Group $group)
     {
         $user = auth('api')->user();
-        $group = Group::findOrFail($group->id);
-        abort_if(!($user->id == $group->user_id && $group->isMember($user)),403,'You Do Not Permission To Preform This action.');
+        Gate::authorize('update-group',$group);
         $data = $request->validate([
             'title' => 'required',
-            'description' => 'required'
+            'description' => 'required',
+            'image' => ['nullable','image']
         ]);
-        $post = new PostResource(Post::create(
+
+        if($request->hasFile('image')) {
+            $pathName = str()->random(25) . time() . '.' . $request->image->getClientOriginalExtension();
+            $request->image->storeAs('posts',$pathName);
+            $data['image'] = 'posts/' . $pathName;
+        } else {
+            $data['image'] = null;
+        }
+
+        // Post handling
+        $post = $group->posts()->create(
             [
                 'user_id' => $user->id,
-                'group_id' => $group->id,
                 'title' => $data['title'],
                 'description' => $data['description'],
+                'image' => $data['image']
             ]
-        ));
+        );
+        $post->loadCount(['likes','comments']);
+        $post = new PostResource($post);
         return $post->response()->setStatusCode(200,'Created Successfully');
     }
 
@@ -56,8 +69,8 @@ class PostController extends Controller
      */
     public function show(Group $group, Post $post)
     {
-        $post = Post::findOrFail($post->id);
-        abort_if($group->id !== $post->group_id ,403,'This ID Not Found');
+        abort_if($group->id !== $post->group_id ,404);
+        $post->loadCount(['likes','comments']);
         $post = new PostResource($post);
         return $post;
     }
@@ -67,12 +80,17 @@ class PostController extends Controller
      */
     public function update(Request $request,Group $group, Post $post)
     {
-        $id = auth('api')->user();
-        $post = Post::findOrFail($post->id);
-        abort_if($group->id !== $post->group_id ,403,'This ID Not Found');
-        Gate::authorize('update', [$post,$id]);
+        Gate::authorize('update', $post);
+          if($request->hasFile('image')) {
+            $pathName = str()->random(25) . time() . '.' . $request->image->getClientOriginalExtension();
+            $request->image->storeAs('posts',$pathName);
+            $image = 'posts/' . $pathName;
+            $post->update($request->except('image') + ['image' => $image]);
+        } else {
+            $post->update($request->all());
+        }
+        $post->loadCount(['likes','comments']);
         $post = new PostResource($post);
-        $post->update($request->all());
         return $post->response()->setStatusCode(200,'Post Update Scccfully');
     }
 
@@ -81,11 +99,7 @@ class PostController extends Controller
      */
     public function destroy(Group $group,Post $post)
     {
-        $id = auth('api')->user();
-        $post = Post::findOrFail($post->id);
-        abort_if($group->id !== $post->group_id ,403,'This ID Not Found');
-        Gate::authorize('delete', [$post,$id]);
-        $post = new PostResource($post);
+        Gate::authorize('delete', $post);
         $post->delete();
         return response()->json(['message' => 'Post Delete Scccfully'],204);
     }

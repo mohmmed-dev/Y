@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        Passport::ignoreRoutes();
     }
 
     /**
@@ -33,9 +33,14 @@ class AppServiceProvider extends ServiceProvider
         Passport::tokensExpireIn(now()->addDays(15));
         Passport::refreshTokensExpireIn(now()->addDays(30));
         Passport::personalAccessTokensExpireIn(now()->addMonths(6));
+        Passport::enablePasswordGrant();
         Event::listen(
         AccessTokenCreated::class,
         RevokeOldTokens::class,
         );
+        
+        Gate::define('update-group' , function (User $user,Group $group) {
+            return $user->id === $group->user_id || $group->isMember($user);
+        });
     }
 }

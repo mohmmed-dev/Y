@@ -7,8 +7,12 @@
 
 تحميل الحزم عن طريق 
 `Composer install `
+قد تحتاج الي تحميل
+` php artisan passport:install`
 ثم تهجير قاعدة البيانات 
 `php artisan migrate`
+قم بتشغيل
+`php artisan key:generate`
 وتشغيل السيرفر الخاصة ب laravel 
 او استخدام اي سيرفر اخر 
 `php artisan serve `

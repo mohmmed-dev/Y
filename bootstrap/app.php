@@ -18,11 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (Throwable $e) {
-        if($e instanceOf NotFoundHttpException) {
-            return response()->Json(['error' =>  ['message' => 'There Is error'] ],404);
-        } else {
-            return response()->Json(['error' =>  ['message' => 'There Is error'] ],'??');
-        }
-    });
+        // $exceptions->render(function (Throwable $e) {
+        // if($e instanceOf NotFoundHttpException) {
+        //     return response()->Json(['error' =>  ['message' => 'There Is error'] ],404);
+        // } else {
+        //     return response()->Json(['error' =>  ['message' => 'There Is error'] ],'??');
+        // }
+    // });
     })->create();

@@ -10,12 +10,12 @@ use App\Policies\GroupPolicy;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
-class GroupController extends Controller
+class GroupController extends Controller implements HasMiddleware
 {
 
     public static function middleware() {
         return [
-            'auth' , new Middleware('api', except: ['index','show'])
+            new Middleware('auth:api', except: ['index','show'])
         ];
     }
     /**
@@ -24,7 +24,7 @@ class GroupController extends Controller
     public function index(Request $request)
     {
         $limit =  $request->input('limit') <= 25 ? $request->input('limit') : 25;
-        $groups = GroupResource::collection(Group::paginate($limit));
+        $groups = GroupResource::collection(Group::where('public' , 1)->withCount('posts','members')->paginate($limit));
         return $groups;
     }
 
@@ -36,13 +36,30 @@ class GroupController extends Controller
         $data = $request->validate([
             'name' => 'required',
             'userId'=> 'required',
-            'description' => 'required'
+            'description' => 'required',
+            'image' => ['nullable','image'],
         ]);
-        $group = new GroupResource(Group::create([
+
+        if($request->hasFile('image')) {
+            $pathName = str()->random(25) . time() . '.' . $request->image->getClientOriginalExtension();
+            $request->image->storeAs('groups',$pathName);
+            $data['image'] = 'groups/' . $pathName;
+        } else {
+            $data['image'] = null;
+        }
+
+        $data['public'] = $request->has('public') ? +$request->public : 1;
+
+        $group = Group::create([
             'name' => $data['name'],
             'user_id' => $data['userId'],
-            'description' => $data['description']
-        ]));
+            'description' => $data['description'],
+            'image' => $data['image'],
+            'public' => $data['public'],
+        ]);
+
+        $group->loadCount('posts','members');
+        $group = new GroupResource($group);
         return $group->response()->setStatusCode(200,'Created Successfully');
     }
 
@@ -51,9 +68,10 @@ class GroupController extends Controller
      */
     public function show(Group $group)
     {
-        $id = auth('api')->user();
-        $group = Group::findOrFail($group->id);
-        $group = new GroupResource($group);
+        if(!$group->public) {
+            Gate::authorize('update-group',$group);
+        }
+        $group = new GroupResource($group->loadCount('posts','members'));
         return $group;
     }
 
@@ -62,11 +80,17 @@ class GroupController extends Controller
      */
     public function update(Request $request, Group $group)
     {
-        $id = auth('api')->user();
-        $group = Group::findOrFail($group->id);
-        Gate::authorize('update', [$group,$id]);
+        Gate::authorize('update', $group);
+        if($request->hasFile('image')) {
+            $pathName = str()->random(25) . time() . '.' . $request->image->getClientOriginalExtension();
+            $request->image->storeAs('groups',$pathName);
+            $image = 'groups/' . $pathName;
+            $group->update($request->except('image') + ['image' => $image]);
+        } else {
+            $group->update($request->except('image'));
+        }
         $group = new GroupResource($group);
-        $group->update($request->all());
+        $group->loadCount('posts','members');
         return $group->response()->setStatusCode(200,'Group Update Scccfully');
     }
 }

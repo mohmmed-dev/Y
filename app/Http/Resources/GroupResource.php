@@ -16,13 +16,13 @@ class GroupResource extends JsonResource
     {
         return [
             "Id" => $this->id,
-            "Owner Id" => $this->user_id,
+            "OwnerId" => $this->user_id,
             "Name" => $this->name,
             "Description" => $this->description,
             "Image" => $this->image,
             "Public" => $this->public,
-            "Members" => $this->members->count(),
-            "Posts" => $this->posts->count()
+            "Members" => $this->members_count,
+            "Posts" => $this->posts_count
         ];
     }
 }

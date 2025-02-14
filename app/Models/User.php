@@ -89,7 +89,6 @@ class User extends Authenticatable
         $this->likes()->attach($post);
     }
 
-
     public function is_following(User $user) {
         return $this->following()->where('group_id',$user->id)->where('confirmed',true)->exists();
     }

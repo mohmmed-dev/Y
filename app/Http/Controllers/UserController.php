@@ -13,27 +13,21 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 
-class UserController extends Controller
+class UserController extends Controller implements HasMiddleware
 {
 
-    protected $userId ;
-    public function __construct()
-    {
-        $this->userId = Auth::user();
-    }
     public static function middleware() {
         return [
-            'auth' , new Middleware('api', except: ['index','show'])
+            new Middleware('auth:api', except: ['index','show','store'])
         ];
     }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
-
     {
-        $limit =  $request->input('limit') <= 25 ? $request->input('limit') : 25;
-        $users = UserResource::collection(User::paginate($limit));
+        $limit = $request->input('limit') <= 25 ? $request->input('limit') : 25;
+        $users = UserResource::collection(User::withCount(['groups','members'])->paginate($limit));
         return $users;
     }
 
@@ -42,19 +36,22 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        // FacadesGate::authorize('create',User::class);
         $data = $request->validate([
             'name' => 'required',
             'email' => 'required|email',
-            'password' => 'required'
+            'password' => 'required',
+            'image' => 'image',
         ]);
-        $user = new UserResource(User::create(
+        // Image Handle And Store
+        $user = User::create(
             [
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
             ]
-        ));
+        );
+        $user->loadCount(['groups','members']);
+        $user = new UserResource($user);
         return $user->response()->setStatusCode(200,'Created Successfully');
     }
 
@@ -63,8 +60,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $user = User::findOrFail($user->id);
-        // FacadesGate::authorize('update',$user);
+        $user->loadCount(['groups','members']);
         $user = new UserResource($user);
         return $user;
     }
@@ -74,11 +70,10 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $user = User::findOrFail($user->id);
-        $id = auth('api')->user();
-        FacadesGate::authorize('update', [$user,$id]);
+        FacadesGate::authorize('update', $user);
         $user = new UserResource($user);
         $user->update($request->all());
+        $user->loadCount(['groups','members']);
         return $user->response()->setStatusCode(200,'User Update Scccfully');
     }
 
@@ -87,11 +82,8 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        $IDuser = new UserResource(User::findOrFail($user->id));
-        $id = auth('api')->user();
-
-        FacadesGate::authorize('update', [$user,$id]);
-        $IDuser->delete();
+        FacadesGate::authorize('delete', $user);
+        $user->delete();
         return response()->json(['message' => 'User Delete Scccfully'],204);
     }
 
@@ -99,22 +91,22 @@ class UserController extends Controller
         $user->addMember($group);
         return 200;
     }
+
     public function deleteMember(User $user ,Group $group) {
         $user->deleteMember($group);
         return 200;
     }
 
     public function like(User $user ,Post $post) {
-        $user = User::findOrFail($user->id);
-        $group = Group::findOrFail($post->group_id);
-        abort_if(!($user->id == $group->user_id && $group->isMember($user)),403,'You Do Not Permission To Preform This action.');
+        $group = $post->group;
+        FacadesGate::authorize('update-group',$group);
         $user->like($post);
         return 200;
     }
+
     public function unLike(User $user ,Post $post) {
-        $user = User::findOrFail($user->id);
-        $group = Group::findOrFail($post->group_id);
-        abort_if(!($user->id == $group->user_id && $group->isMember($user)),403,'You Do Not Permission To Preform This action.');
+        $group = $post->group;
+        FacadesGate::authorize('update-group',$group);
         $user->unLike($post);
         return 200;
     }

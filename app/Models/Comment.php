@@ -11,6 +11,8 @@ class Comment extends Model
 {
     use HasFactory;
 
+    protected $with = ['replies'];
+
     protected $fillable = [
         'user_id',
         'post_id',
@@ -25,7 +27,7 @@ class Comment extends Model
         return $this->belongsTo(post::class);
     }
 
-    public function comments() {
+    public function replies() {
         return $this->hasMany(CommentForComment::class);
     }
 }

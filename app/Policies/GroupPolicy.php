@@ -13,9 +13,11 @@ class GroupPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(?User $user, Group $group,string $id)
+    public function view(User $user,Group $group) {
+        return $user->id === $group->user_id ? Response::allow() : Response::deny("You Do Not Permission To Preform This action.");
+    }
+    public function update(User $user, Group $group)
     {
-        $auth = json_decode($id);
-        return $auth->id === $group->user_id  ? Response::allow() : Response::deny("You Do Not Permission To Preform This action.");
+        return $user->id === $group->user_id  ? Response::allow() : Response::deny("You Do Not Permission To Preform This action.");
     }
 }

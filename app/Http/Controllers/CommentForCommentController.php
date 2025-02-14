@@ -12,12 +12,12 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Gate;
 
-class CommentForCommentController extends Controller
+class CommentForCommentController extends Controller implements HasMiddleware
 {
 
     public static function middleware() {
         return [
-            'auth' , new Middleware('api', except: ['index','show'])
+            new Middleware('auth:api', except: ['index','show'])
         ];
     }
     /**
@@ -25,9 +25,9 @@ class CommentForCommentController extends Controller
      */
     public function index(Comment $comment)
     {
-        $comments = Comment::findOrFail($comment->id)->comments;
-        $comments = CommentForCommentResource::collection($comments);
-        return $comments;
+        $replies = $comment->replies;
+        $replies = CommentForCommentResource::collection($replies);
+        return $replies;
     }
     /**
      * Store a newly created resource in storage.
@@ -35,22 +35,20 @@ class CommentForCommentController extends Controller
     public function store(Request $request,Comment $comment)
     {
         $user = auth('api')->user();
-        $comment = Comment::findOrFail($comment->id);
-        $post = Post::findOrFail($comment->post_id);
-        $group = Group::findOrFail($post->group_id);
-        abort_if(!($user->id == $group->user_id && $group->isMember($user)),403,'You Do Not Permission To Preform This action.');
-        $post = Post::findOrFail($comment->post_id);
+        $post = $comment->post;
+        $group = $post->group;
+        Gate::authorize('update-group',$group);
         $data = $request->validate([
             'description' => 'required'
         ]);
-        $CommentForComment = new CommentForCommentResource(CommentForComment::create(
+        $reply = $comment->replies()->create(
             [
                 'user_id' => $user->id,
-                'comment_id' => $comment->id,
                 'description' => $data['description']
             ]
-        ));
-        return $CommentForComment->response()->setStatusCode(200,'Created Successfully');
+        );
+        $reply = new CommentForCommentResource($reply);
+        return $reply->response()->setStatusCode(200,'Created Successfully');
     }
 
     /**
@@ -58,9 +56,8 @@ class CommentForCommentController extends Controller
      */
     public function show(Comment $comment,CommentForComment $commentForComment)
     {
-        $CommentForComment = CommentForComment::findOrFail($commentForComment->id);
-        abort_if($comment->id !== $CommentForComment->comment_id ,403,'This ID Not Found');
-        $CommentForComment = new CommentForCommentResource($CommentForComment);
+        abort_if($comment->id !== $commentForComment->comment_id ,404,'This ID Not Found');
+        $CommentForComment = new CommentForCommentResource($commentForComment);
         return $CommentForComment;
     }
 
@@ -69,11 +66,9 @@ class CommentForCommentController extends Controller
      */
     public function update(Request $request, Comment $comment ,CommentForComment $commentForComment)
     {
-        $id = auth('api')->user();
-        $CommentForComment = CommentForComment::findOrFail($commentForComment->id);
-        abort_if($comment->id !== $CommentForComment->comment_id ,403,'This ID Not Found');
-        Gate::authorize('update',[$CommentForComment,$id]);
-        $CommentForComment = new CommentForCommentResource($CommentForComment);
+        abort_if($comment->id !== $commentForComment->comment_id ,404,'This ID Not Found');
+        Gate::authorize('update', $commentForComment);
+        $CommentForComment = new CommentForCommentResource($commentForComment);
         $CommentForComment->update($request->all());
         return $CommentForComment->response()->setStatusCode(200,'CommentForComment Update Scccfully');
     }
@@ -83,12 +78,9 @@ class CommentForCommentController extends Controller
      */
     public function destroy( Comment $comment ,CommentForComment $commentForComment)
     {
-        $id = auth('api')->user();
-        $CommentForComment = CommentForComment::findOrFail($commentForComment->id);
-        abort_if($comment->id !== $CommentForComment->comment_id ,403,'This ID Not Found');
-        Gate::authorize('delete',[$CommentForComment,$id]);
-        $CommentForComment = new CommentForCommentResource($CommentForComment);
-        $CommentForComment->delete();
+        abort_if($comment->id !== $commentForComment->comment_id ,404,'This ID Not Found');
+        Gate::authorize('delete',$commentForComment);
+        $commentForComment->delete();
         return response()->json(['message' => 'CommentForComment Delete Scccfully'],204);
     }
 }

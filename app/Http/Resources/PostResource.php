@@ -17,13 +17,13 @@ class PostResource extends JsonResource
     {
         return [
             'Id' => $this->id,
-            'User Id' => $this->user_id,
-            'Group Id' => $this->group_id,
+            'UserId' => $this->user_id,
+            'GroupId' => $this->group_id,
             'Title' => $this->title,
             'Description' => $this->description,
             'Image' => $this->image,
-            'Likes' => $this->likes->count(),
-            'comments' => $this->comments->count(),
+            'Likes' => $this->likes_count,
+            'comments' => $this->comments_count,
             'Time' => $this->created_at->diffForHumans()
         ];
     }

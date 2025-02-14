@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-// use App\Resource\CommentForCommentResource;
+use App\Http\Resources\CommentForCommentResource;
 class CommentResource extends JsonResource
 {
     /**
@@ -16,10 +16,11 @@ class CommentResource extends JsonResource
     {
         return [
             'Id' => $this->id,
-            'User Id' => $this->user_id,
-            'Post Id' => $this->post_id,
+            'UserId' => $this->user_id,
+            'PostId' => $this->post_id,
             'Description' => $this->description,
-            "Comments" => $this->comments->count(),
+            "NumberOfReplies" => $this->replies_count,
+            "Replies" => CommentForCommentResource::collection($this->replies),
             'Time' => $this->created_at->diffForHumans()
         ];
     }

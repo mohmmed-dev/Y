@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class LoginController extends Controller
 {
     public function login(Request $request) {
+
         $validatedData = $request->validate([
             'email' => 'required',
             'password' => 'required'

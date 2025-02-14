@@ -12,19 +12,17 @@ class PostPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(?User $user, Post $post,string $id)
+    public function update(User $user, Post $post)
     {
-        $auth = json_decode($id);
-        return $auth->id === $post->user_id  ? Response::allow() : Response::deny("You Do Not Permission To Preform This action.");
+        return $user->id === $post->user_id  ? Response::allow() : Response::deny("You Do Not Permission To Preform This action.");
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(?User $user, Post $post,string $id)
+    public function delete(User $user, Post $post)
     {
-        $auth = json_decode($id);
-        return $auth->id === $post->user_id  ? Response::allow() : Response::deny("You Do Not Permission To Preform This action.");
+        return $user->id === $post->user_id  ? Response::allow() : Response::deny("You Do Not Permission To Preform This action.");
     }
 
 }
